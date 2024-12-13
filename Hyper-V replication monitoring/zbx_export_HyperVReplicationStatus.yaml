@@ -1,0 +1,44 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 846977d1dfed4968bc5f8bdb363285bc
+      name: 'Templates/Operating systems'
+  templates:
+    - uuid: 6df7779fded146d7b1e7cc14b4695c34
+      template: 'Hyper-V Discovery active'
+      name: 'Hyper-V Discovery active'
+      groups:
+        - name: 'Templates/Operating systems'
+      items:
+        - uuid: 8b2f14d1a3dd47019058ebbde1f0ff00
+          name: 'Hyper-V Replication Status Master'
+          type: ZABBIX_ACTIVE
+          key: vm.replication.status
+          value_type: TEXT
+          trends: '0'
+          timeout: 10s
+      discovery_rules:
+        - uuid: 35ca2fefbf1044449683afc5d83ed4ce
+          name: 'Discover Hyper-V VM Replication'
+          type: DEPENDENT
+          key: vm.replication.rule
+          delay: '0'
+          item_prototypes:
+            - uuid: 8a2bda8cfd604831bd547ca09c503e4d
+              name: 'VM Replication Status for {#VMNAME}'
+              type: DEPENDENT
+              key: 'vm.replication.status[{#VMNAME}]'
+              delay: '0'
+              value_type: TEXT
+              trends: '0'
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$.[?(@.VMName == "{#VMNAME}")].ReplicationState.first()'
+              master_item:
+                key: vm.replication.status
+          master_item:
+            key: vm.replication.status
+          lld_macro_paths:
+            - lld_macro: '{#VMNAME}'
+              path: '$.["VMName"]'
